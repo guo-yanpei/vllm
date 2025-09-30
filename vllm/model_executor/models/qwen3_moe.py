@@ -26,7 +26,6 @@ import typing
 from collections.abc import Callable, Iterable
 from itertools import islice
 from typing import Any, Optional, Union
-
 import torch
 from torch import nn
 from transformers import Qwen3MoeConfig
@@ -255,6 +254,7 @@ class Qwen3MoeAttention(nn.Module):
         positions: torch.Tensor,
         hidden_states: torch.Tensor,
     ) -> torch.Tensor:
+        print("hidden_states type:", hidden_states.dtype, "weight type:", self.qkv_proj.weight.dtype)
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         # Add qk-norm

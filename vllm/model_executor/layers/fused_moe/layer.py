@@ -1776,6 +1776,8 @@ class FusedMoE(CustomOp):
             )
         else:
             zero_expert_result = None
+        print(topk_ids)
+
         return topk_weights, topk_ids, zero_expert_result
 
     def must_reduce_shared_expert_outputs(self) -> bool:
