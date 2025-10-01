@@ -3,7 +3,7 @@
 
 import itertools
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union, cast, Tuple
 
 import cloudpickle
 import torch.nn as nn
@@ -42,7 +42,7 @@ from vllm.lora.request import LoRARequest
 from vllm.model_executor.layers.quantization import QuantizationMethods
 from vllm.outputs import (ClassificationRequestOutput, EmbeddingRequestOutput,
                           PoolingRequestOutput, RequestOutput,
-                          ScoringRequestOutput)
+                          ScoringRequestOutput, AdditionalOutput)
 from vllm.plugins.io_processors import get_io_processor
 from vllm.pooling_params import PoolingParams
 from vllm.sampling_params import (BeamSearchParams, RequestOutputKind,
@@ -1594,10 +1594,12 @@ class LLM:
 
         # Run the engine.
         outputs: list[Union[RequestOutput, PoolingRequestOutput]] = []
+        additional_outputs = []
         total_in_toks = 0
         total_out_toks = 0
         while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step()
+            step_outputs, step_additional_outputs = self.llm_engine.step()
+            additional_outputs.append(step_additional_outputs)
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
@@ -1626,4 +1628,4 @@ class LLM:
         # Sort the outputs by request ID.
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
-        return sorted(outputs, key=lambda x: int(x.request_id))
+        return sorted(outputs, key=lambda x: int(x.request_id)), additional_outputs

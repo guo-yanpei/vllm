@@ -75,6 +75,8 @@ class PoolingOutput:
         return (isinstance(other, self.__class__) and bool(
             (self.data == other.data).all()))
 
+class AdditionalOutput:
+    selected_expert_ids: Optional[torch.Tensor] = None
 
 class RequestOutput:
     """The output data of a completion request to the LLM.
@@ -116,6 +118,7 @@ class RequestOutput:
         *,
         multi_modal_placeholders: Optional[MultiModalPlaceholderDict] = None,
         kv_transfer_params: Optional[dict[str, Any]] = None,
+        selected_expert_ids: Optional[torch.Tensor] = None,
         # Forward compatibility, code that uses args added in new release can
         # still run with older versions of vLLM without breaking.
         **kwargs: Any,
@@ -136,6 +139,7 @@ class RequestOutput:
         self.encoder_prompt_token_ids = encoder_prompt_token_ids
         self.num_cached_tokens = num_cached_tokens
         self.kv_transfer_params = kv_transfer_params
+        self.selected_expert_ids = selected_expert_ids
 
     def add(self, next_output: "RequestOutput", aggregate: bool) -> None:
         """Merge subsequent RequestOutput into this one"""

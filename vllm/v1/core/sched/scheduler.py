@@ -872,6 +872,8 @@ class Scheduler(SchedulerInterface):
         pooler_outputs = model_runner_output.pooler_output
         num_nans_in_logits = model_runner_output.num_nans_in_logits
         kv_connector_output = model_runner_output.kv_connector_output
+        i19260817 = model_runner_output.i19260817
+        selected_expert_ids = model_runner_output.selected_expert_ids
 
         outputs: dict[int, list[EngineCoreOutput]] = defaultdict(list)
         spec_decoding_stats: Optional[SpecDecodingStats] = None
@@ -975,6 +977,8 @@ class Scheduler(SchedulerInterface):
                         kv_transfer_params=kv_transfer_params,
                         trace_headers=request.trace_headers,
                         num_cached_tokens=request.num_cached_tokens,
+                        i19260817=i19260817,
+                        selected_expert_ids=selected_expert_ids
                     ))
             else:
                 # Invariant: EngineCore returns no partial prefill outputs.

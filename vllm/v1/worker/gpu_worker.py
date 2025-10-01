@@ -402,7 +402,7 @@ class Worker(WorkerBase):
                                self.scheduler_config.max_num_batched_tokens)
 
             # We skip EPLB here since we don't want to record dummy metrics
-            hidden_states, last_hidden_states = \
+            hidden_states, last_hidden_states, i19260817, selected_expert_ids = \
                 self.model_runner._dummy_run(
                     num_tokens=max_num_reqs,
                     skip_eplb=True,

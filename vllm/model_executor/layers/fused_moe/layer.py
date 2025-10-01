@@ -286,6 +286,7 @@ class FusedMoEMethodBase(QuantizeMethodBase):
         raise NotImplementedError
 
 
+
 @CustomOp.register("unquantized_fused_moe")
 class UnquantizedFusedMoEMethod(FusedMoEMethodBase, CustomOp):
     """MoE method without quantization."""
@@ -906,7 +907,7 @@ def maybe_roundup_hidden_size(
 
     return hidden_size
 
-
+topk_ids_cache = []
 @CustomOp.register("fused_moe")
 class FusedMoE(CustomOp):
     """FusedMoE layer for MoE models.
@@ -1776,7 +1777,8 @@ class FusedMoE(CustomOp):
             )
         else:
             zero_expert_result = None
-        print(topk_ids)
+
+        topk_ids_cache.append(topk_ids)
 
         return topk_weights, topk_ids, zero_expert_result
 

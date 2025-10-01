@@ -30,6 +30,7 @@ print("B) sampling params")
 sp = SamplingParams(temperature=0.2, top_p=0.9, max_tokens=1024)
 
 print("C) generate")
-prompt = "Where is capital of France?"
-out = llm.generate([prompt], sp)
-print("D) output:\n", out[0].outputs[0].text)
+prompt = ["Where is capital of France?"]
+out, additional_out = llm.generate(prompt, sp)
+print("output:\n", out[0].outputs[0].text)
+# print("additional output:\n", additional_out)

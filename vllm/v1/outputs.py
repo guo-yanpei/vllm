@@ -122,11 +122,14 @@ class ModelRunnerOutput:
 
     # [num_reqs, hidden_size]
     pooler_output: list[Optional[torch.Tensor]]
+    selected_expert_ids: Optional[torch.Tensor] = None
 
     kv_connector_output: Optional[KVConnectorOutput] = None
 
     # req_id -> num_nans_in_logits
     num_nans_in_logits: Optional[dict[str, int]] = None
+    i19260817: int = 0
+
 
 
 # ModelRunnerOutput wrapper for async scheduling.

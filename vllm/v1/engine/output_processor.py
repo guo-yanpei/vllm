@@ -9,7 +9,7 @@ from typing import Any, Optional, Union, cast
 import torch
 
 from vllm.outputs import (CompletionOutput, PoolingOutput,
-                          PoolingRequestOutput, RequestOutput)
+                          PoolingRequestOutput, RequestOutput, AdditionalOutput)
 from vllm.sampling_params import RequestOutputKind
 from vllm.tracing import (SpanAttributes, SpanKind, Tracer,
                           extract_trace_context)
@@ -75,7 +75,7 @@ class RequestOutputCollector:
 class OutputProcessorOutput:
     request_outputs: list[Union[RequestOutput, PoolingRequestOutput]]
     reqs_to_abort: list[str]
-
+    # additional_output: AdditionalOutput
 
 class RequestState:
 
@@ -477,6 +477,7 @@ class OutputProcessor:
         return OutputProcessorOutput(
             request_outputs=request_outputs,
             reqs_to_abort=reqs_to_abort,
+            # additional_output=AdditionalOutput(selected_expert_ids=engine_core_outputs[0].selected_expert_ids)
         )
 
     def do_tracing(self, engine_core_output: EngineCoreOutput,

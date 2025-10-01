@@ -369,6 +369,7 @@ class Fp8LinearMethod(LinearMethodBase):
         # Update layer with new values.
         layer.weight = Parameter(weight.data, requires_grad=False)
         layer.weight_scale = Parameter(weight_scale.data, requires_grad=False)
+        # print(f"weight dtype {layer.weight.dtype}, weight_scale dtype {layer.weight_scale.dtype}")
         layer.input_scale = Parameter(
             input_scale,
             requires_grad=False) if input_scale is not None else None
@@ -389,6 +390,7 @@ class Fp8LinearMethod(LinearMethodBase):
               bias: Optional[torch.Tensor] = None) -> torch.Tensor:
 
         if self.use_marlin:
+            # print("Using Marlin FP8 linear")
             return apply_fp8_marlin_linear(
                 input=x,
                 weight=layer.weight,
@@ -399,6 +401,7 @@ class Fp8LinearMethod(LinearMethodBase):
                 bias=bias)
 
         if self.block_quant:
+            # print("Using block quant FP8 linear")
             return apply_fp8_block_linear(
                 layer,
                 input=x,
@@ -406,6 +409,7 @@ class Fp8LinearMethod(LinearMethodBase):
                 cutlass_block_fp8_supported=self.cutlass_block_fp8_supported,
                 use_aiter_and_is_supported=self.use_aiter_and_is_supported)
 
+        # print("Using per-tensor FP8 linear")
         return self.fp8_linear.apply(input=x,
                                      weight=layer.weight,
                                      weight_scale=layer.weight_scale,

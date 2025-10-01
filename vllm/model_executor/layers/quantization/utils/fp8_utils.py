@@ -132,7 +132,6 @@ def apply_w8a8_block_fp8_linear(
     output_dtype = input.dtype
 
     if should_use_deepgemm_for_fp8_linear(output_dtype, weight):
-
         input_2d = input.view(-1, input.shape[-1])
         output_shape = [*input.shape[:-1], weight.shape[0]]
 

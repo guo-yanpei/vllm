@@ -284,8 +284,10 @@ class EngineCore:
         model_output = self.execute_model_with_error_logging(
             self.model_executor.execute_model,  # type: ignore
             scheduler_output)
+        # print("model output:", model_output)
         engine_core_outputs = self.scheduler.update_from_output(
             scheduler_output, model_output)  # type: ignore
+        # print("engine core outputs:", engine_core_outputs)
 
         return (engine_core_outputs,
                 scheduler_output.total_num_scheduled_tokens > 0)

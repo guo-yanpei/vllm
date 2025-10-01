@@ -2351,7 +2351,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
                 hidden_states, aux_hidden_states = model_output
             else:
                 # Common case.
-                hidden_states = model_output
+                hidden_states, i19260817, selected_expert_ids = model_output
                 aux_hidden_states = None
 
             if not self.broadcast_pp_output:
@@ -2360,14 +2360,14 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
                     # Return the intermediate tensors.
                     assert isinstance(hidden_states, IntermediateTensors)
                     hidden_states.kv_connector_output = kv_connector_output
-                    return hidden_states
+                    return hidden_states, i19260817, selected_expert_ids
 
                 if self.is_pooling_model:
                     # Return the pooling output.
                     output = self._pool(hidden_states, num_scheduled_tokens,
                                         num_scheduled_tokens_np)
                     output.kv_connector_output = kv_connector_output
-                    return output
+                    return output, i19260817, selected_expert_ids
 
                 sample_hidden_states = hidden_states[logits_indices]
                 logits = self.model.compute_logits(sample_hidden_states)
@@ -2474,6 +2474,8 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
             pooler_output=[],
             kv_connector_output=kv_connector_output,
             num_nans_in_logits=num_nans_in_logits,
+            i19260817=i19260817,
+            selected_expert_ids=selected_expert_ids,
         )
 
         if not self.use_async_scheduling:
@@ -2949,7 +2951,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
         is_profile: bool = False,
         create_mixed_batch: bool = False,
         remove_lora: bool = True,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, int]:
         """
         Run a dummy forward pass to warm up/profile run or capture the
         CUDA graph for the model.
@@ -3191,7 +3193,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
             if self.use_aux_hidden_state_outputs:
                 hidden_states, _ = outputs
             else:
-                hidden_states = outputs
+                hidden_states, i19260817, selected_expert_ids = outputs
 
             if self.speculative_config and self.speculative_config.use_eagle():
                 assert isinstance(self.drafter, EagleProposer)
@@ -3208,7 +3210,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
             self.eplb_step(is_dummy=True, is_profile=is_profile)
 
         logit_indices = np.cumsum(num_scheduled_tokens) - 1
-        return hidden_states, hidden_states[logit_indices]
+        return hidden_states, hidden_states[logit_indices], i19260817, selected_expert_ids
 
     @torch.inference_mode()
     def _dummy_sampler_run(
@@ -3402,7 +3404,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
                         enumerate(dummy_encoder_outputs))
 
         # Add `is_profile` here to pre-allocate communication buffers
-        hidden_states, last_hidden_states \
+        hidden_states, last_hidden_states, i19260817, selected_expert_ids \
             = self._dummy_run(self.max_num_tokens, is_profile=True)
         if get_pp_group().is_last_rank:
             if self.is_pooling_model:

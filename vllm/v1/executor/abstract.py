@@ -103,6 +103,7 @@ class Executor(ExecutorBase):
         output = self.collective_rpc("execute_model",
                                      args=(scheduler_output, ),
                                      non_block=non_block)
+        # print("oooooooooooooooooooo:", output)
         return output[0]
 
     def execute_dummy_batch(self) -> None:

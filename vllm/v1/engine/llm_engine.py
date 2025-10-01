@@ -4,7 +4,7 @@
 import time
 from collections.abc import Mapping
 from copy import copy
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, Tuple
 
 import torch.nn as nn
 from typing_extensions import TypeVar
@@ -18,7 +18,7 @@ from vllm.inputs import PromptType
 from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.multimodal import MULTIMODAL_REGISTRY, MultiModalRegistry
-from vllm.outputs import PoolingRequestOutput, RequestOutput
+from vllm.outputs import PoolingRequestOutput, RequestOutput, AdditionalOutput
 from vllm.pooling_params import PoolingParams
 from vllm.sampling_params import SamplingParams
 from vllm.tasks import SupportedTask
@@ -254,7 +254,7 @@ class LLMEngine:
             # Add the request to EngineCore.
             self.engine_core.add_request(child_request)
 
-    def step(self) -> Union[list[RequestOutput], list[PoolingRequestOutput]]:
+    def step(self) -> Tuple[Union[list[RequestOutput], list[PoolingRequestOutput]], AdditionalOutput]:
 
         if self.should_execute_dummy_batch:
             self.should_execute_dummy_batch = False
@@ -283,7 +283,7 @@ class LLMEngine:
             )
             self.do_log_stats_with_interval()
 
-        return processed_outputs.request_outputs
+        return processed_outputs.request_outputs, outputs.outputs[0].selected_expert_ids
 
     def get_vllm_config(self):
         return self.vllm_config

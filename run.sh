@@ -1,6 +1,6 @@
 export CMAKE_CUDA_ARCHITECTURES=90
 export TORCH_CUDA_ARCH_LIST="9.0"
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=4
 
 python setup.py install
 echo $1

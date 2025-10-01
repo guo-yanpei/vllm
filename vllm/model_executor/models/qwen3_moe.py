@@ -25,7 +25,7 @@
 import typing
 from collections.abc import Callable, Iterable
 from itertools import islice
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Tuple
 import torch
 from torch import nn
 from transformers import Qwen3MoeConfig
@@ -38,6 +38,7 @@ from vllm.distributed import (get_ep_group, get_pp_group,
 from vllm.logger import init_logger
 from vllm.model_executor.layers.activation import SiluAndMul
 from vllm.model_executor.layers.fused_moe import FusedMoE
+from vllm.model_executor.layers.fused_moe.layer import topk_ids_cache
 from vllm.model_executor.layers.layernorm import RMSNorm
 from vllm.model_executor.layers.linear import (MergedColumnParallelLinear,
                                                QKVParallelLinear,
@@ -169,7 +170,6 @@ class Qwen3MoeSparseMoeBlock(nn.Module):
 
 
 class Qwen3MoeAttention(nn.Module):
-
     def __init__(
         self,
         hidden_size: int,
@@ -254,7 +254,6 @@ class Qwen3MoeAttention(nn.Module):
         positions: torch.Tensor,
         hidden_states: torch.Tensor,
     ) -> torch.Tensor:
-        print("hidden_states type:", hidden_states.dtype, "weight type:", self.qkv_proj.weight.dtype)
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         # Add qk-norm
@@ -416,7 +415,7 @@ class Qwen3MoeModel(nn.Module):
         if not get_pp_group().is_last_rank:
             return IntermediateTensors({
                 "hidden_states": hidden_states,
-                "residual": residual
+                "residual": residual,
             })
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
@@ -665,10 +664,13 @@ class Qwen3MoeForCausalLM(nn.Module, SupportsPP, SupportsLoRA,
         positions: torch.Tensor,
         intermediate_tensors: Optional[IntermediateTensors] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
-    ) -> Union[torch.Tensor, IntermediateTensors]:
+    ) -> Tuple[Union[torch.Tensor, IntermediateTensors], int, torch.Tensor]:
+        global topk_ids_cache
+        topk_ids_cache.clear()
         hidden_states = self.model(input_ids, positions, intermediate_tensors,
                                    inputs_embeds)
-        return hidden_states
+        return hidden_states, 19260817, [t.numpy() for t in topk_ids_cache.cpu()]
+
 
     def compute_logits(
         self,
