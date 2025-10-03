@@ -669,7 +669,7 @@ class Qwen3MoeForCausalLM(nn.Module, SupportsPP, SupportsLoRA,
         topk_ids_cache.clear()
         hidden_states = self.model(input_ids, positions, intermediate_tensors,
                                    inputs_embeds)
-        return hidden_states, 19260817, [t.numpy() for t in topk_ids_cache.cpu()]
+        return hidden_states, 19260817, [t.detach() for t in topk_ids_cache]
 
 
     def compute_logits(

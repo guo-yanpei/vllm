@@ -145,10 +145,8 @@ class ExecutorBase(ABC):
     def execute_model(
         self, execute_model_req: ExecuteModelRequest
     ) -> Optional[List[Union[SamplerOutput, PoolerOutput]]]:
-        print("pppppppppppppppppppppp in")
         output = self.collective_rpc("execute_model",
                                      args=(execute_model_req, ))
-        print("pppppppppppppppppppppp out")
         return output[0]
 
     def stop_remote_worker_execution_loop(self) -> None:

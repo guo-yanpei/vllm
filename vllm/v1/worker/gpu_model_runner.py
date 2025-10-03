@@ -2352,6 +2352,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
             else:
                 # Common case.
                 hidden_states, i19260817, selected_expert_ids = model_output
+                selected_expert_ids = [t.to("cpu", non_blocking=True).contiguous().numpy() for t in selected_expert_ids]
                 aux_hidden_states = None
 
             if not self.broadcast_pp_output:
@@ -2465,6 +2466,7 @@ class GPUModelRunner(LoRAModelRunnerMixin, KVConnectorModelRunnerMixin):
         with record_function_or_nullcontext("EPLB"):
             self.eplb_step()
 
+        # print(f"lllllllllllllllllllll {logprobs_lists.device}")
         output = ModelRunnerOutput(
             req_ids=req_ids_output_copy,
             req_id_to_index=req_id_to_index_output_copy,

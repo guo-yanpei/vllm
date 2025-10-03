@@ -2,6 +2,8 @@ from vllm import LLM, SamplingParams
 import random
 import numpy as np
 import torch
+import sys, io, traceback
+
 
 def set_seed(seed):
     """Set seeds for reproducibility"""
@@ -23,7 +25,6 @@ llm = LLM(
     gpu_memory_utilization=0.85,     # give headroom
     max_model_len=8192,              # start modest, scale later
     download_dir="/home/guest/data/guo_yanpei",
-    enforce_eager=True               # for debugging
 )
 
 print("B) sampling params")
@@ -33,4 +34,4 @@ print("C) generate")
 prompt = ["Where is capital of France?"]
 out, additional_out = llm.generate(prompt, sp)
 print("output:\n", out[0].outputs[0].text)
-# print("additional output:\n", additional_out)
+print("additional output:\n", additional_out)
